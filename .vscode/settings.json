@@ -1,7 +1,8 @@
 {
     "cSpell.words": [
         "hasm",
-        "movi"
+        "movi",
+        "sinstruction"
     ],
     "files.associations": {
         "functional": "cpp",
@@ -19,6 +20,12 @@
         "array": "cpp",
         "iterator": "cpp",
         "string_view": "cpp",
-        "initializer_list": "cpp"
+        "initializer_list": "cpp",
+        "type_traits": "cpp",
+        "ostream": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "utility": "cpp",
+        "*.tcc": "cpp"
     }
 }

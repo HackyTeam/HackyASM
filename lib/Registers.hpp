@@ -3,12 +3,9 @@
 #include <Variant.hpp>
 namespace hasm
 {
-    static constexpr void mov_iregister(hsd::u64 src, hsd::u64& dest)
-    {
-        dest = src;
-    }
+    struct independed_instruction {};
 
-    static constexpr void mov_fregister(hsd::f64 src, hsd::f64& dest)
+    static constexpr void mov_register(hsd::u64 src, hsd::u64& dest, independed_instruction)
     {
         dest = src;
     }
@@ -116,6 +113,8 @@ namespace hasm
     using instruction_storage = hsd::variant<
         void (*)(hsd::u64, hsd::u64&), 
         void (*)(hsd::f64, hsd::f64&), 
+        void (*)(hsd::u64, hsd::u64&, independed_instruction),
+        void (*)(hsd::u64& independed_instruction),
         void (*)(hsd::u64&), void (*)(hsd::f64&)
     >;
     

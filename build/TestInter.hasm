@@ -1,2 +1,6 @@
-movi 5 rax
-addi 10 rax
+mov 0x5 xmm0
+addf 0xa xmm0
+incf xmm0
+push xmm0
+pop rax
+ret
