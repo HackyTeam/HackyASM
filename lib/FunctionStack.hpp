@@ -18,6 +18,12 @@ namespace hasm
             exec_instructions.push_back(instructions);
         }
 
+        template <typename Func>
+        void add_extern_func(const hsd::string_view& name, Func&& func)
+        {
+            stack.extern_funcs.emplace(name, hsd::forward<Func>(func));
+        }
+
         function_stack() = default;
         function_stack(const function_stack&) = delete;
         function_stack& operator=(const function_stack&) = delete;
@@ -99,6 +105,12 @@ namespace hasm
                             case sinstruction_type::push:
                             {
                                 push_stack(args_stack, stack.registers.at(dst).unwrap());
+                                break;
+                            }
+                            case sinstruction_type::call:
+                            {
+                                auto& func = stack.extern_funcs.at(dst).unwrap();
+                                func(args_stack).unwrap();
                                 break;
                             }
                             default:

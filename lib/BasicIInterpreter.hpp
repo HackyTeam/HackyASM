@@ -16,6 +16,12 @@ namespace hasm
             : file{hsd::io::load_file(fiename.data(), hsd::io::options::text::read).unwrap()}
         {}
 
+        template <typename Func>
+        void add_extern_func(const hsd::string_view& name, Func&& func)
+        {
+            stack.add_extern_func(name, std::forward<Func>(func));
+        }
+
         void run()
         {
             while (file.is_eof() == false)

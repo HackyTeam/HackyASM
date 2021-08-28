@@ -2,6 +2,7 @@
 
 #include <String.hpp>
 #include <UnorderedMap.hpp>
+#include <Functional.hpp>
 
 #include "Registers.hpp"
 
@@ -32,6 +33,10 @@ namespace hasm
 
         stack_frame(stack_frame&&) = default;
         stack_frame& operator=(stack_frame&&) = default;
+
+        static inline hsd::unordered_map<
+            hsd::string_view, hsd::function<void(hsd::vector<hsd::u64>&)>
+        > extern_funcs;
 
         hsd::unordered_map<hsd::string_view, register_storage> registers =
         {{
@@ -99,6 +104,8 @@ namespace hasm
         {{
             {"pop"_sv , sinstruction_type::pop },
             {"push"_sv, sinstruction_type::push},
+            {"call"_sv, sinstruction_type::call},
+            {"nop"_sv , sinstruction_type::nop },
             {"ret"_sv , sinstruction_type::ret }
         }};
     };

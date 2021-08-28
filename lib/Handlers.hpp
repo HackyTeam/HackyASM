@@ -1,10 +1,119 @@
 #pragma once
 
 #include <Vector.hpp>
+#include <Functional.hpp>
 #include "Registers.hpp"
 
 namespace hasm
 {
+    namespace args_helper
+    {
+        template <typename>
+        struct arg_type;
+
+        template <typename T>
+        requires (!std::is_class_v<T>)
+        struct arg_type<T>
+        {
+            T value;
+        };
+
+        template <typename T>
+        requires (std::is_class_v<T>)
+        struct arg_type<T>
+        {
+            T* value;
+
+            constexpr operator T&()
+            {
+                return *value;
+            }
+        };
+
+
+        template <typename T>
+        struct arg_type<T&>
+        {
+            T* value;
+
+            constexpr operator T&()
+            {
+                return *value;
+            }
+        };
+
+        template <typename T>
+        struct arg_type<T&&>
+        {
+            T* value;
+
+            constexpr operator T&()
+            {
+                return *value;
+            }
+        };
+
+        template <typename>
+        struct as_args_tup;
+
+        template <typename Res, typename Scope, bool Case, typename... Args>
+        struct as_args_tup<Res(Scope::*)(Args...) noexcept(Case)>
+        {
+            using type = hsd::tuple<arg_type<Args>...>;
+        };
+
+        template <typename Res, typename Scope, bool Case, typename... Args>
+        struct as_args_tup<Res(Scope::*)(Args...)& noexcept(Case)>
+        { 
+            using type = hsd::tuple<arg_type<Args>...>;
+        };
+
+        template <typename Res, typename Scope, bool Case, typename... Args>
+        struct as_args_tup<Res(Scope::*)(Args...) const noexcept(Case)>
+        { 
+            using type = hsd::tuple<arg_type<Args>...>;
+        };
+
+        template <typename Res, typename Scope, bool Case, typename... Args>
+        struct as_args_tup<Res(Scope::*)(Args...) const& noexcept(Case)>
+        { 
+            using type = hsd::tuple<arg_type<Args>...>;
+        };
+
+        static inline void as_arg(auto& arg, hsd::u64 value)
+        {
+            if constexpr (hsd::is_pointer<decltype(arg.value)>::value)
+            {
+                arg.value = reinterpret_cast<decltype(arg.value)>(value);
+            }
+            else
+            {
+                if constexpr (sizeof(decltype(arg.value)) == 8)
+                {
+                    arg.value = hsd::bit_cast<decltype(arg.value)>(value);
+                }
+                else if constexpr (sizeof(decltype(arg.value)) == 4)
+                {
+                    arg.value = hsd::bit_cast<decltype(arg.value)>(
+                        static_cast<hsd::u32>(value)
+                    );
+                }
+                else if constexpr (sizeof(decltype(arg.value)) == 2)
+                {
+                    arg.value = hsd::bit_cast<decltype(arg.value)>(
+                        static_cast<hsd::u16>(value)
+                    );
+                }
+                else
+                {
+                    arg.value = hsd::bit_cast<decltype(arg.value)>(
+                        static_cast<hsd::u8>(value)
+                    );
+                }
+            }
+        }
+    } // namespace args_helper
+    
     template <typename... Ts> 
     struct overloaded : Ts...
     {
@@ -12,6 +121,43 @@ namespace hasm
     };
 
     template <typename... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
+    template <typename Func>
+    static inline void call(Func&& func, hsd::vector<hsd::u64>& args)
+    {
+        if constexpr (requires {&Func::operator();})
+        {
+            typename args_helper::as_args_tup<
+                decltype(&Func::operator())
+            >::type args_tup;
+
+            [&]<hsd::usize... Idx>(hsd::index_sequence<Idx...>)
+            {
+                ((
+                    args_helper::as_arg(
+                        args_tup.template get<Idx>(), args.back()
+                    ), args.pop_back()
+                ), ...);
+
+                func(args_tup.template get<Idx>().value...);
+            }(hsd::make_index_sequence<args_tup.size()>{});
+        }
+        else
+        {
+            typename args_helper::as_args_tup<Func>::type args_tup;
+
+            [&]<hsd::usize... Idx>(hsd::index_sequence<Idx...>)
+            {
+                ((
+                    args_helper::as_arg(
+                        args_tup.template get<Idx>(), args.back()
+                    ), args.pop_back()
+                ), ...);
+
+                func(args_tup.template get<Idx>().value...);
+            }(hsd::make_index_sequence<args_tup.size()>{});
+        }
+    }
 
     static inline void push_stack(hsd::vector<hsd::u64>& stack, register_storage& reg_val)
     {
