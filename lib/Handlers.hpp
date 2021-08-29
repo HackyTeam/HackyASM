@@ -16,6 +16,11 @@ namespace hasm
         struct arg_type<T>
         {
             T value;
+
+            constexpr operator T&()
+            {
+                return value;
+            }
         };
 
         template <typename T>
@@ -139,7 +144,7 @@ namespace hasm
                     ), args.pop_back()
                 ), ...);
 
-                func(args_tup.template get<Idx>().value...);
+                func(args_tup.template get<Idx>()...);
             }(hsd::make_index_sequence<args_tup.size()>{});
         }
         else
@@ -154,7 +159,7 @@ namespace hasm
                     ), args.pop_back()
                 ), ...);
 
-                func(args_tup.template get<Idx>().value...);
+                func(args_tup.template get<Idx>()...);
             }(hsd::make_index_sequence<args_tup.size()>{});
         }
     }
@@ -315,4 +320,110 @@ namespace hasm
             }
         );
     } 
+
+    static inline hsd::Result<void, hsd::runtime_error> handle_case(
+        const char* src, auto& src_res, auto& dst_res, auto& zero_flag, auto&& func)
+    {
+        if (src_res.is_ok())
+        {
+            if (src_res.unwrap().index() == dst_res.index())
+            {
+                zero_flag = func(src_res.unwrap(), dst_res);
+            }
+            else
+            {
+                return hsd::runtime_error{"Invalid comparison"};
+            }
+        }
+        else if (src[0] == '0' && src[1] == 'x')
+        {
+            register_storage _storage;
+
+            dst_res.visit(
+                [&]<typename T>(T&)
+                {
+                    hsd::u64 dest = 0;
+                    sscanf(src, "%llx", &dest);
+                    _storage = hsd::bit_cast<T>(dest);
+                }
+            );
+
+            zero_flag = func(_storage, dst_res);
+        }
+        else
+        {
+            return hsd::runtime_error{"Invalid comparison"};
+        }
+
+        return {};
+    }
+
+    static inline bool equal_case(register_storage& r1, register_storage& r2)
+    {
+        return r1.visit(
+            [&r2](auto& val1)
+            {
+                return r2.visit(
+                    [&val1](auto& val2)
+                        -> hsd::Result<bool, hsd::runtime_error>
+                    {
+                        if constexpr (hsd::is_same<decltype(val1), decltype(val2)>::value)
+                        {
+                            return val1 == val2;
+                        }
+                        else
+                        {
+                            return hsd::runtime_error{"Invalid types"};
+                        }
+                    }
+                ).unwrap();
+            }
+        );
+    }
+
+    static inline bool less_case(register_storage& r1, register_storage& r2)
+    {
+        return r1.visit(
+            [&r2](auto& val1)
+            {
+                return r2.visit(
+                    [&val1](auto& val2)
+                        -> hsd::Result<bool, hsd::runtime_error>
+                    {
+                        if constexpr (hsd::is_same<decltype(val1), decltype(val2)>::value)
+                        {
+                            return val1 < val2;
+                        }
+                        else
+                        {
+                            return hsd::runtime_error{"Invalid types"};
+                        }
+                    }
+                ).unwrap();
+            }
+        );
+    }
+
+    static inline bool greater_case(register_storage& r1, register_storage& r2)
+    {
+        return r1.visit(
+            [&r2](auto& val1)
+            {
+                return r2.visit(
+                    [&val1](auto& val2)
+                        -> hsd::Result<bool, hsd::runtime_error>
+                    {
+                        if constexpr (hsd::is_same<decltype(val1), decltype(val2)>::value)
+                        {
+                            return val1 > val2;
+                        }
+                        else
+                        {
+                            return hsd::runtime_error{"Invalid types"};
+                        }
+                    }
+                ).unwrap();
+            }
+        );
+    }
 } // namespace hasm

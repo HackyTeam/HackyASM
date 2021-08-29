@@ -1,5 +1,13 @@
-mov 0x5 xmm0
-addf 0xa xmm0
-push xmm0
+mov 0xff rax
+mov rax rbx
+muli 0xffff rbx
+addi 0x3ff0000000 rbx
+muli 0xffffff rbx
+push rbx
 call printlnf
+push rbx
+call printlni
+deci rax
+cmple 0x0 rax
+jnz 0x1
 ret

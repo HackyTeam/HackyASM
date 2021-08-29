@@ -14,15 +14,10 @@ namespace hasm
     enum class sinstruction_type
         : hsd::uchar
     {
-        nop,
-        ret,
-        call,
-        jmp,
-        jmp_if,
-        jmp_if_not,
-        jmp_if_zero,
-        push,
-        pop
+        nop, ret, call, 
+        jmp, jnz, push,
+        pop, cmp_le,
+        cmp_gt, cmp_eq,
     };
 
     struct stack_frame
@@ -57,6 +52,7 @@ namespace hasm
             {"rbp"_sv  , register_storage{0ull}},
             {"rip"_sv  , register_storage{0ull}},
             {"rsp"_sv  , register_storage{0ull}},
+            {"zf"_sv   , register_storage{0ull}},
             {"xmm0"_sv , register_storage{0.00}},
             {"xmm1"_sv , register_storage{0.00}},
             {"xmm2"_sv , register_storage{0.00}},
@@ -102,11 +98,16 @@ namespace hasm
 
         static inline hsd::unordered_map<hsd::string_view, sinstruction_type> sinstructions =
         {{
-            {"pop"_sv , sinstruction_type::pop },
-            {"push"_sv, sinstruction_type::push},
-            {"call"_sv, sinstruction_type::call},
-            {"nop"_sv , sinstruction_type::nop },
-            {"ret"_sv , sinstruction_type::ret }
+            {"pop"_sv , sinstruction_type::pop   },
+            {"push"_sv, sinstruction_type::push  },
+            {"call"_sv, sinstruction_type::call  },
+            {"nop"_sv , sinstruction_type::nop   },
+            {"ret"_sv , sinstruction_type::ret   },
+            {"jmp"_sv , sinstruction_type::jmp   },
+            {"jnz"_sv , sinstruction_type::jnz   },
+            {"cmpeq"  , sinstruction_type::cmp_eq},
+            {"cmple"  , sinstruction_type::cmp_le},
+            {"cmpgt"  , sinstruction_type::cmp_gt}
         }};
     };
 } // namespace hasm

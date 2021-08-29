@@ -1,10 +1,17 @@
 {
     "cSpell.words": [
+        "cmpeq",
+        "cmpgt",
+        "cmple",
+        "deci",
         "hasm",
         "incf",
+        "mkptr",
         "movi",
+        "muli",
         "println",
         "printlnf",
+        "printlni",
         "sinstruction"
     ],
     "files.associations": {

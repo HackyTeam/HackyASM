@@ -114,7 +114,7 @@ namespace hasm
         void (*)(hsd::u64, hsd::u64&), 
         void (*)(hsd::f64, hsd::f64&), 
         void (*)(hsd::u64, hsd::u64&, independed_instruction),
-        void (*)(hsd::u64& independed_instruction),
+        void (*)(hsd::u64&, independed_instruction), 
         void (*)(hsd::u64&), void (*)(hsd::f64&)
     >;
     
